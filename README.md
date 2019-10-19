@@ -8,23 +8,31 @@
 
 ## 仮想環境の準備
 
-```ps
+'''ps
 $ py -m venv emenv
-```
+'''
 
 .gitignoreに仮想環境名を追記
 
-```gitignore
+'''gitignore
 emenv
 
 (後略)
-```
+'''
 
-```ps
+'''ps
 $ emenv/Scripts/activate
 (emenv)$ pip install flask flask_sqlalchemy psycopg2
 (emenv)$ pip freeze > requirements.txt
-```
+'''
+
+## データベースの準備
+
+'''ps
+$ py
+>>> from app import db
+>>> db.create_all()
+'''
 
 ---
 
