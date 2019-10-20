@@ -1,13 +1,22 @@
 from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 # os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 db = SQLAlchemy(app)
 
-# Model
 
+def url_validator(url):
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc, result.path])
+    except:
+        return False
+
+
+# Model
 
 class Host(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -64,26 +73,36 @@ def read():
     # return "Hello World!"
     if request.method == 'GET':
         hosts = Host.query.all()
-        return jsonify([i.serialize for i in hosts])
+        # return jsonify([i.serialize for i in hosts])
+        return render_template('readall.html', hosts=hosts)
 
 
 @app.route("/", methods=['POST'])
 def create():
     if request.method == 'POST':
-        hostname = request.form['hostname']
-        uri = request.form['uri']
-        if not db.session.query(Host).filter(Host.uri == uri).count():
-            db.session.add(Host(hostname, uri))
-            db.session.commit()
+        try:
+            hostname = request.form['hostname']
+            uri = request.form['uri']
+            if url_validator(uri):
+                if not db.session.query(Host).filter(Host.uri == uri).count():
+                    db.session.add(Host(hostname, uri))
+                    db.session.commit()
 
-        order = request.form['order']
-        method = request.form['method']
-        value = request.form['value']
-        host_id = Host.query.filter_by(uri=uri).first().id
-        db.session.add(Task(order, method, value, host_id))
-        db.session.commit()
+                try:
+                    order = request.form['order']
+                    method = request.form['method']
+                    value = request.form['value']
+                    host_id = Host.query.filter_by(uri=uri).first().id
+                    db.session.add(Task(order, method, value, host_id))
+                    db.session.commit()
 
-        return jsonify({'message': 'Added'})
+                    return jsonify({'message': 'Added'})
+                except:
+                    pass
+        except:
+            pass
+
+    return jsonify({'message': 'Not added'})
 
 
 if __name__ == '__main__':

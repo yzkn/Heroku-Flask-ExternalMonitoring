@@ -1,0 +1,9 @@
+{% extends "common.html" %}
+{% block content %}
+<h3>ホスト一覧</h3>
+<ul>
+{% for host in hosts %}
+    <li>{{ host.hostname}} : <a href="{{ host.uri }}">{{ host.uri }}</a></li>
+{% endfor %}
+</ul>
+{% endblock %}
