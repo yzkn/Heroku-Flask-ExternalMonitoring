@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from urllib.parse import urlparse
@@ -23,6 +24,7 @@ class Host(db.Model):
     hostname = db.Column(db.String(80), unique=False)
     uri = db.Column(db.String(255), unique=True)
     tasks = db.relationship('Task', backref='task', lazy=True)
+    results = db.relationship('Result', backref='result', lazy=True)
 
     def __init__(self, hostname, uri):
         self.hostname = hostname
@@ -38,6 +40,7 @@ class Host(db.Model):
             'hostname': self.hostname,
             'uri': self.uri,
             'tasks': [i.serialize for i in self.tasks],
+            'results': [j.serialize for j in self.results],
         }
 
 
@@ -67,6 +70,33 @@ class Task(db.Model):
             'host_id': self.host_id,
         }
 
+
+class Result(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    check_datetime = db.Column(db.DateTime, default=datetime.now())
+    status_code = db.Column(db.Integer)
+    image_filepath = db.Column(db.String(255))
+    host_id = db.Column(db.Integer, db.ForeignKey('host.id'))
+
+    # def __init__(self, check_datetime, status_code, image_filepath, host_id):
+    def __init__(self, status_code, image_filepath, host_id):
+        # self.check_datetime = check_datetime
+        self.status_code = status_code
+        self.image_filepath = image_filepath
+        self.host_id = host_id
+
+    def __repr__(self):
+        return '<Result %r %d %r %d>' % (self.check_datetime.isoformat(), self.status_code, self.image_filepath, self.host_id)
+
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'check_datetime': self.check_datetime.isoformat(),
+            'status_code': self.status_code,
+            'image_filepath': self.image_filepath,
+            'host_id': self.host_id,
+        }
 
 @app.route('/')
 def read():
